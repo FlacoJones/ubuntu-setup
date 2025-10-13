@@ -1,0 +1,16 @@
+keymap:
+  - name: "Nav chords"
+    exact_match: false
+    remap:
+      # Ctrl-Left/Right → Home/End
+      C-Left: Home
+      C-Right: End
+
+      # Alt-Left/Right → Ctrl-Left/Right
+      Alt-Left: C-Left
+      Alt-Right: C-Right
+      # (equivalently: M-Left / M-Right)
+
+      # Optional: make the Shifted variants explicit (not required with exact_match: false)
+      # Shift-Alt-Left: Shift-C-Left
+      # Shift-Alt-Right: Shift-C-Right
