@@ -117,11 +117,11 @@ sudo modprobe pl2303
 # Password: (check router documentation)
 
 # Common initial commands:
-enable
-configure terminal
-show version
-show interfaces
-show running-config
+Router> enable
+Router# configure terminal
+Router# show version
+Router# show interfaces
+Router# show running-config
 ```
 
 ### Quick Connection Script
