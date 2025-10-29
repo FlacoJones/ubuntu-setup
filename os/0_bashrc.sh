@@ -14,6 +14,8 @@ add_to_bashrc() {
 # Add configurations to .bashrc
 add_to_bashrc "alias c='clear'"
 add_to_bashrc "stty intr ^E"
+add_to_bashrc "alias k=kubectl"
+add_to_bashrc "alias k=kubectl get pods"
 
 echo ""
 echo "To apply changes to your current shell, run:"

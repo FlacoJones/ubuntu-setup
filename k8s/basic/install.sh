@@ -9,22 +9,43 @@ echo "=========================================="
 echo "Kubernetes Basic Installation - Ubuntu 24.04"
 echo "=========================================="
 
+# Get desired hostname from user
+echo ""
+read -p "Enter the desired hostname for this node: " NODE_HOSTNAME
+
+# Validate hostname is not empty
+if [ -z "$NODE_HOSTNAME" ]; then
+    echo "Error: Hostname cannot be empty"
+    exit 1
+fi
+
+# Set the hostname
+echo "[1/8] Setting hostname to '$NODE_HOSTNAME'..."
+sudo hostnamectl set-hostname "$NODE_HOSTNAME"
+
+# Update /etc/hosts
+sudo sed -i "/127.0.1.1/d" /etc/hosts
+echo "127.0.1.1       $NODE_HOSTNAME" | sudo tee -a /etc/hosts
+
+echo "Hostname set to: $(hostname)"
+echo ""
+
 # Update system packages
-echo "[1/7] Updating system packages..."
+echo "[2/8] Updating system packages..."
 sudo apt-get update
 sudo apt-get upgrade -y
 
 # Install prerequisites
-echo "[2/7] Installing prerequisites..."
+echo "[3/8] Installing prerequisites..."
 sudo apt-get install -y apt-transport-https ca-certificates curl gpg
 
 # Disable swap (required for kubelet)
-echo "[3/7] Disabling swap..."
+echo "[4/8] Disabling swap..."
 sudo swapoff -a
 sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 
 # Load kernel modules
-echo "[4/7] Loading required kernel modules..."
+echo "[5/8] Loading required kernel modules..."
 cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
 overlay
 br_netfilter
@@ -34,7 +55,7 @@ sudo modprobe overlay
 sudo modprobe br_netfilter
 
 # Configure sysctl parameters for Kubernetes networking
-echo "[5/7] Configuring network parameters..."
+echo "[6/8] Configuring network parameters..."
 cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
 net.bridge.bridge-nf-call-iptables  = 1
 net.bridge.bridge-nf-call-ip6tables = 1
@@ -45,7 +66,7 @@ EOF
 sudo sysctl --system
 
 # Install containerd (container runtime)
-echo "[6/7] Installing containerd..."
+echo "[7/8] Installing containerd..."
 sudo apt-get install -y containerd
 
 # Configure containerd
@@ -58,7 +79,7 @@ sudo systemctl restart containerd
 sudo systemctl enable containerd
 
 # Add Kubernetes GPG key and repository
-echo "[7/7] Installing Kubernetes components (kubeadm, kubelet, kubectl)..."
+echo "[8/8] Installing Kubernetes components (kubeadm, kubelet, kubectl)..."
 curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
 echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
