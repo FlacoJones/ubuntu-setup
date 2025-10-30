@@ -1,178 +1,110 @@
-# Cisco Router Factory Reset Guide
+# Cisco Router Complete Reset
 
-## ⚠️ WARNING
-**Factory reset will erase ALL configurations including:**
-- Network settings (IP addresses, subnets)
-- Firewall rules
-- NAT configurations
-- DHCP settings
-- Wireless settings
-- Port forwarding rules
-- All custom configurations
+## Quick Reset Commands
 
-**ALWAYS backup your configuration before proceeding!**
-
----
-
-## Backup Configuration First
+### Connect via console cable, then run:
 
 ```bash
-# Cisco IOS
-Router# copy running-config tftp:
-# or
-Router# write memory
-Router# copy startup-config tftp://[TFTP_SERVER_IP]/backup.cfg
-
-# Show current config before reset
-Router# show running-config
+Router> enable
+Router# write erase
+Router# reload
 ```
 
----
-
-## Method 1: Hardware Reset Button
-
-### Cisco Routers
-1. Locate the **RESET** button (usually recessed on back/bottom)
-2. With router powered ON, press and hold the reset button
-3. Hold for **10-30 seconds** (until LEDs flash or change pattern)
-4. Release the button
-5. Wait for router to fully reboot (2-5 minutes)
-6. Router will be at factory defaults
-
-### Typical Default Credentials After Reset
-- IP Address: `192.168.1.1` or `192.168.0.1`
-- Username: `admin` or no username
-- Password: `admin`, `cisco`, or no password
+**When prompted:**
+1. "Save? [yes/no]:" → Type **no** and press Enter
+2. "Proceed with reload? [confirm]" → Press **Enter**
 
 ---
 
-## Method 2: Console CLI Reset
+## Detailed Step-by-Step
 
-### Cisco IOS Router
+### 1. Enter Privileged Mode
 ```bash
-# Connect via console cable
-# Enter privileged EXEC mode
 Router> enable
+```
 
-# Erase startup configuration
+### 2. Erase Startup Configuration
+```bash
 Router# write erase
-# or
+```
+
+**Alternative commands (all do the same thing):**
+```bash
 Router# erase startup-config
+Router# erase nvram:
+```
 
-# Confirm when prompted
-[confirm]
+When prompted:
+```
+Erasing the nvram filesystem will remove all configuration files! Continue? [confirm]
+```
+Press **Enter** to confirm.
 
-# Reload the router
+Expected output:
+```
+[OK]
+Erase of nvram: complete
+```
+
+### 3. Delete VLAN Database (if using VLANs)
+```bash
+Router# delete vlan.dat
+```
+
+Or force delete without confirmation:
+```bash
+Router# delete /force vlan.dat
+```
+
+### 4. Reload the Router
+```bash
 Router# reload
+```
 
-# Confirm reload
+**Important:** You will see TWO prompts:
+
+**First prompt - Save configuration:**
+```
+System configuration has been modified. Save? [yes/no]:
+```
+Type **no** and press Enter.
+
+**Second prompt - Confirm reload:**
+```
 Proceed with reload? [confirm]
 ```
+Press **Enter** to confirm.
 
-### Cisco IOS-XE Router
-```bash
-Router> enable
-Router# write erase
-Router# delete /force vlan.dat
-Router# reload
-```
+### 5. Wait for Reboot
+- Router will restart (2-5 minutes)
+- All configuration will be cleared
+- Router returns to factory defaults
 
 ---
 
-## Post-Reset Configuration
+## After Reset
 
-### Immediate Actions
-1. Connect via console cable or Ethernet
-2. Set your computer to obtain IP automatically (DHCP)
-3. Access router at default IP address
-4. Log in with default credentials
-5. **IMMEDIATELY change admin password**
+### Skip Initial Setup Dialog
+When router boots, you'll see:
+```
+Would you like to enter the initial configuration dialog? [yes/no]:
+```
 
-### Basic Initial Configuration
+Type **no** and press Enter.
 
+```
+Would you like to terminate autoinstall? [yes]:
+```
+
+Press Enter (or type **yes**).
+
+### Access Fresh Router
 ```bash
-# Set hostname
 Router> enable
 Router# configure terminal
-Router(config)# hostname R1
-
-# Set enable password
-R1(config)# enable secret YourNewPassword
-
-# Configure console password
-R1(config)# line console 0
-R1(config-line)# password YourConsolePassword
-R1(config-line)# login
-R1(config-line)# exit
-
-# Configure VTY (Telnet/SSH) password
-R1(config)# line vty 0 15
-R1(config-line)# password YourVTYPassword
-R1(config-line)# login
-R1(config-line)# exit
-
-# Configure interface
-R1(config)# interface gi0/0
-R1(config-if)# ip address 192.168.1.1 255.255.255.0
-R1(config-if)# no shutdown
-R1(config-if)# exit
-
-# Save configuration
-R1(config)# exit
-R1# write memory
-# or
-R1# copy running-config startup-config
+Router(config)#
 ```
 
----
-
-## Troubleshooting
-
-### Reset Button Not Working
-- Ensure router is powered ON during reset
-- Try holding for longer (up to 60 seconds)
-- Try using a paperclip or pin for recessed buttons
-- Verify you're pressing RESET button (not MODE button)
-
-### Cannot Access Router After Reset
-- Verify computer is on same subnet
-- Check physical cable connections
-- Try different Ethernet port
-- Release/renew DHCP: `sudo dhclient -r && sudo dhclient`
-- Connect via console cable for direct access
-
-### Router Stuck in Boot Loop
-1. Unplug power
-2. Wait 30 seconds
-3. Hold reset button while plugging power back in
-4. Continue holding for 30 seconds
-5. Release and wait for full boot
+Router is now completely cleared and ready for fresh configuration!
 
 ---
-
-## Console Connection Settings
-
-**Serial Port Settings:**
-- Baud Rate: 9600
-- Data Bits: 8
-- Parity: None
-- Stop Bits: 1
-- Flow Control: None
-
-**Connect using:**
-```bash
-# Using minicom
-sudo minicom -D /dev/ttyUSB0 -b 9600
-
-# Using screen
-screen /dev/ttyUSB0 9600
-```
-
----
-
-## Additional Notes
-
-- Console cable required for CLI reset (RJ45 to USB/Serial)
-- Default credentials vary by model - check label on router
-- Some routers may use 115200 baud rate instead of 9600
-- Enterprise routers typically don't have hardware reset buttons
